@@ -1,0 +1,432 @@
+---
+title: "Predicting Car Price"
+author: "JOSHUAZHANG -- 805573810"
+date: "2022-07-19"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+### Setup
+```{r}
+carsTest = read.csv("SummercarsTestNoY.csv", header = TRUE)
+carsTrain = read.csv("SummercarsTrain.csv", header = TRUE)
+carsdif = carsTrain
+carsdif2 = carsTest
+```
+
+```{r}
+library(ggplot2)
+library(ggfortify)
+library(corrplot)
+library(GGally)
+library(tidyverse)
+library(stringr)
+library(dplyr)
+library(regclass)
+library(car)
+library(lm.beta)
+library(leaps)
+library(stats)
+library(flexmix)
+```
+### Intial Understanding of the Data Set
+```{r}
+dim(carsTest)
+dim(carsTrain)
+```
+These are the dimensions for the training and testing datasets
+
+```{r}
+nums <- unlist(lapply(carsTrain, is.numeric), use.names = FALSE)  
+numcol = carsTrain[,nums]
+numpred = numcol[-c(1)]
+cordata <- round(cor(numpred, use="pairwise.complete.obs"),15)
+cordata[,15]
+```
+Out of the numerical predictors the highest correlation to PriceNew is Horsepower. 
+
+```{r}
+summary(lm(PriceNew~Type, data= carsTrain))
+summary(lm(PriceNew~AirBags, data= carsTrain))
+summary(lm(PriceNew~DriveTrain, data= carsTrain))
+summary(lm(PriceNew~Man.trans.avail, data= carsTrain))
+summary(lm(PriceNew~Origin, data= carsTrain))
+summary(lm(PriceNew~Cylinders, data= carsTrain))
+summary(lm(PriceNew~Make, data= carsTrain))
+```
+The best R^2 score of the categorical predictors is 0.991 from the Make variable. 
+
+### Regsubsets 
+
+```{r}
+fwd = regsubsets(PriceNew~., data=carsTrain, method ="forward",nvmax =10)
+summary(fwd)
+```
+From the forward selection summary we see that in addition to the variables Type(Midsize) and HorsePower, many different levels of the Make variable are chosen. We see that a lot of the cars that are being chosen are pretty expensive cars from top brands such as Mercedes-Benz, Cadillac, and Audi. Just from my own understanding of cars, these cars may be more pricey because of the luxuriness associated with these brands. Thus one way we may transform the make variable is to categorize each car into luxury or not luxury. However since I do not have knowledge on how to categorize the cars, I utilized autotrader, a car selling website. Autotrader has a list of brands which they categorize as luxury brands. These include Acura, Alfa Romeo, Aston Martin, Audi, BMW, Bentley, Bugatti, Cadillac, Ferrari, INFINITI, Jaguar, Karma, Lamborghini, Land Rover, Lexus, Lincoln, Lotus, Maserati, McLaren, Mercedes-Benz, Porshe, Rolls-Royce, and Tesla. Based on these makes, I looked up all the makes in the carsTrain$Make category and any car that fell under these categories I would classify as Luxury. If not I would classify them as not luxury.
+
+```{r}
+simp= c()
+for (i in carsTrain$Make){
+  if (i == "Acura Legend"| i == "Acura Integra" |i == "Audi 100" | i == "Audi 90"| i == "BMW 535i" |i == "Cadillac DeVille" | i == "Cadillac Seville" | i == "Cadillac Seville"|i == "Chevrolet Corvette"| i == "Infiniti Q45"| i == "Lexus ES300" |i == "Lexus SC300"|i == "Lincoln Continental" |i == "Lincoln Town_Car" |i == "Mercedes-Benz 190E" | i == "Mercedes-Benz 300E"){
+    simp = c(simp, "Luxury")
+  }
+  else {
+    simp = c(simp, "Not Luxury")
+  }
+}
+simp = as.data.frame(simp)
+colnames(simp) = c("Make")
+carsdif$Make = simp$Make
+```
+
+```{r}
+mod = lm(PriceNew ~ Make, data = carsdif)
+summary(mod)
+```
+We see that the R^2 value drops dramatically to 0.5968, but this is still better than all other categorical variables. However before using this as the transformed variable, one thing I noticed is that there is something special specifically about the Mercedes-Benz 300E car. In the regsubsets it was the second best predictor and used in all except for the first model (which had Horsepower). So I investigated further into this phenomon. 
+
+First I created a histogram to see the distribution of the data. 
+```{r}
+ggplot(data=carsTrain, aes(x = PriceNew)) + geom_histogram(binwidth = 5000, color = 'black', fill = "#00a1d5") + theme_classic()
+```
+We find that there seems to be an outlier around the 60,000 price area. 
+
+```{r}
+carsTrain %>% group_by(Make) %>% summarise(mean = mean(PriceNew)) %>% arrange(mean)
+```
+So I decided to see which Make this outlier was and found that it was the Mercedes-Benz 300E. The mean price of the Mercedes-Benz was more than 14,000 more than the second highest make Infiniti-Q45. SO I wanted to see what happened if we make Mercedes-Benz its own category since it was a lot different than the other cars. 
+
+Transformation of the Make variable into 3 categories: Luxury, Non-Luxury, and Mercedes-Benz 300E
+```{r}
+simp= c()
+for (i in carsTrain$Make){
+  if (i == "Acura Legend"| i == "Acura Integra" |i == "Audi 100" | i == "Audi 90"| i == "BMW 535i" |i == "Cadillac DeVille" | i == "Cadillac Seville" | i == "Cadillac Seville"|i == "Chevrolet Corvette"| i == "Infiniti Q45"| i == "Lexus ES300" |i == "Lexus SC300"|i == "Lincoln Continental" |i == "Lincoln Town_Car" |i == "Mercedes-Benz 190E"){
+    simp = c(simp, "Luxury")
+  }
+  else if (i == "Mercedes-Benz 300E"){
+    simp = c(simp, "Mercedes-Benz300E")
+  }
+  else {
+    simp = c(simp, "Not Luxury")
+  }
+}
+simp = as.data.frame(simp)
+colnames(simp) = c("Make")
+carsdif$Make = simp$Make
+```
+
+```{r}
+mod = lm(PriceNew ~ Make, data = carsdif)
+summary(mod)
+```
+Just by adding one more category we find the R^2 value goes up almost 0.1, which is quite a bit. So now we have transformed the make category from over 50 different levels to just 3 levels. And still the R^2 value of the variable is high around 0.6846. 
+
+Now with the new transformed variable I perform another regsubset to see the new best predictors. 
+
+```{r}
+fwd = regsubsets(PriceNew~., data=carsdif, method ="exhaustive",nvmax =10)
+summary(fwd)
+```
+```{r}
+fwd = regsubsets(PriceNew~., data=carsdif, method ="forward",nvmax =10)
+summary(fwd)
+```
+```{r}
+fwd = regsubsets(PriceNew~., data=carsdif, method ="backward",nvmax =10)
+summary(fwd)
+```
+From the regsubsets using all three methods, forward, backward, and exhaustive we find more numerical and categorical predictors that are important in addition to the Make variable. So in addition to minimizing the Make variable, our transformation has also allowed us to see other important variables. AirBags and specifically the level None pops up as an important predictor in all of the three methods. Since only None is important, I decided to again transform the Airbags variable to two levels None and Not-None. 
+
+```{r}
+res.sum = summary(fwd)
+data.frame(
+  Adj.R2 = which.max(res.sum$adjr2),
+  CP = which.min(res.sum$cp),
+  BIC = which.min(res.sum$bic)
+)
+```
+The best model is the 10th or the one with the most predictors. We see it satisfies the requirements of AdjR2 CP and BIC
+
+```{r}
+simp4 = c()
+for (i in carsTrain$AirBags){
+  if (i == "None" ){
+    simp4 = c(simp4, "None")
+  }
+  else {
+    simp4 = c(simp4, "Not None")
+  }
+}
+simp4 = as.data.frame(simp4)
+colnames(simp4) = c("AirBags")
+carsdif$AirBags = simp4$AirBags
+```
+
+Through just 3 predictors we see that we have a R^2 value of 0.8769. Our new variables have done good work.
+```{r}
+mod = lm(PriceNew ~ Make + AirBags + Horsepower, data = carsdif)
+summary(mod)
+```
+Let's do another set of regsubsets
+```{r}
+fwd = regsubsets(PriceNew~., data=carsdif, method ="exhaustive",nvmax =10)
+summary(fwd)
+```
+
+```{r}
+fwd = regsubsets(PriceNew~., data=carsdif, method ="forward",nvmax =10)
+summary(fwd)
+```
+
+```{r}
+fwd = regsubsets(PriceNew~., data=carsdif, method ="backward",nvmax =10)
+summary(fwd)
+```
+`We see that TypeSmall and Cylinders 4 and 8 May be Important
+```{r}
+simp2 = c()
+for (i in carsTrain$Type){
+  if (i == "Small" ){
+    simp2 = c(simp2, "Small")
+  }
+  else {
+    simp2 = c(simp2, "Not Small")
+  }
+}
+simp2 = as.data.frame(simp2)
+colnames(simp2) = c("Type")
+carsdif$Type = simp2$Type
+```
+
+```{r}
+simp5 = c()
+for (i in carsTrain$Cylinders){
+  if (i == "4" ){
+    simp5 = c(simp5, "4")
+  }
+  else if (i == "8") {
+    simp5 = c(simp5, "8")
+  }
+  else{
+    simp5 = c(simp5, "Not 4 or 8")
+  }
+}
+simp5 = as.data.frame(simp5)
+colnames(simp5) = c("Cylinders")
+carsdif$Cylinders = simp5$Cylinders
+```
+
+```{r}
+mod = lm(PriceNew ~ Make + Type + AirBags + Horsepower + Cylinders, data = carsdif)
+summary(mod)
+```
+```{r}
+mod = lm(PriceNew ~ Make + Type + AirBags + Horsepower, data = carsdif)
+summary(mod)
+```
+From these two outputs we can see that the R^2 does not change much when we add more predictors to the Make, AirBags, and Horsepower trio of predictors. Cylinders does not seem to have much of an increase on the R^2(only 0.004), whereas the Type does increase R^2 by a decent 0.02. 
+
+Reversing Cylinders
+```{r}
+carsdif$Cylinders = carsTrain$Cylinders
+```
+
+Trying out Type Midsize
+```{r}
+simp2 = c()
+for (i in carsTrain$Type){
+  if (i == "Midsize" ){
+    simp2 = c(simp2, "Midsize")
+  }
+  else {
+    simp2 = c(simp2, "Not Midsize")
+  }
+}
+simp2 = as.data.frame(simp2)
+colnames(simp2) = c("Type")
+carsdif$Type = simp2$Type
+```
+
+```{r}
+mod = lm(PriceNew ~ Make + Type + AirBags + Horsepower, data = carsdif)
+summary(mod)
+```
+It seems that Type Small is a better categorical predictor than Type Midsize. I already had a model with the Type Midsize categorical predictor, and it resulted in the best R^2 so far. Better than the Type Small so I will keep the Type Midsize. Also apart of that model cylinders 5 and 6 were good. 
+```{r}
+simp5 = c()
+for (i in carsTrain$Cylinders){
+  if (i == "5" ){
+    simp5 = c(simp5, "5")
+  }
+  else if(i == "6"){
+    simp5 = c(simp5, "6")
+  }
+  else{
+    simp5 = c(simp5, "Not 5 or 6")
+  }
+}
+simp5 = as.data.frame(simp5)
+colnames(simp5) = c("Cylinders")
+carsdif$Cylinders = simp5$Cylinders
+```
+
+```{r}
+fwd = regsubsets(PriceNew~., data=carsdif, method ="exhaustive",nvmax =10)
+summary(fwd)
+```
+
+```{r}
+fwd = regsubsets(PriceNew~., data=carsdif, method ="forward",nvmax =10)
+summary(fwd)
+```
+
+```{r}
+fwd = regsubsets(PriceNew~., data=carsdif, method ="backward",nvmax =10)
+summary(fwd)
+```
+From this final set of 3 regsubsets we get the 3 different full models: 
+```{r}
+mod = lm(PriceNew ~ Horsepower + AirBags + Width + Man.trans.avail + Fuel.tank.capacity + Make + Cylinders, data = carsdif)
+summary(mod)
+```
+
+```{r}
+mod = lm(PriceNew ~ Horsepower + AirBags + Width + Wheelbase + Fuel.tank.capacity + Make + Type + Cylinders, data = carsdif)
+summary(mod)
+```
+
+```{r}
+mod = lm(PriceNew ~ Horsepower + AirBags + Width + Wheelbase + Fuel.tank.capacity + Make + Type + Rev.per.mile + Turn.circle , data = carsdif)
+summary(mod)
+```
+The first model is the best model with the higher R^2 value of 0.9928 and also has less betas so we use that one as our final model.
+
+```{r}
+best = lm(PriceNew ~ Horsepower + AirBags + Width + Man.trans.avail + Fuel.tank.capacity + Make + Cylinders, data = carsdif)
+summary(best)
+VIF(best)
+```
+We see that the VIF of all our Predictors are less than the 5 threshold. Also all of the betas have strong significance with a p-value less than 2e-16. 
+
+```{r}
+autoplot(best)
+```
+
+```{r}
+summary(powerTransform(PriceNew ~ Horsepower + AirBags + Width + Man.trans.avail + Fuel.tank.capacity + Make + Cylinders, data = carsTrain))
+```
+According the the powerTransform the best transformation of the PriceNew variable is no transformation. The best power is the first exponent. 
+
+
+Checking the Outliers and Bad Leverage points 
+```{r}
+cutoff <- 2*10/1500
+LVR <- ifelse(hatvalues(best) >= cutoff, "Yes", "No")
+OTL <- ifelse(abs(rstandard(best)) >= 2, "Yes", "No")
+table(LVR,OTL)
+``` 
+```{r}
+lev = hatvalues(best)
+outliers = abs(rstandard(best))
+
+index = 1
+badlev = c()
+for (i in lev){
+  if(i >= cutoff){
+    if(outliers[index] >= 2){
+      badlev = c(badlev, index)
+    }
+  }
+  index = index +1
+}
+badlev
+```
+Removing the 10 bad leverage points from the data to see the effects it has
+```{r}
+removebadlev =  carsdif[-c(30,150,217,240,471,816,827,963,125,1278),]
+nobadlev = lm(PriceNew ~ Horsepower + AirBags + Width + Man.trans.avail + Fuel.tank.capacity + Make + Cylinders, data = removebadlev)
+summary(nobadlev)
+```
+Seems to be a better R^2, but after testing it on Kaggle, the model with the bad leverages inside the dataset is better for the testing model so we keep the bad leverage points in the dataset. 
+
+We also need to do the same transformations to the testing dataset that we did to the training dataset
+```{r}
+simp= c()
+for (i in carsTest$Make){
+  if (i == "Acura Legend" | i == "Acura Integra"| i == "Audi 100" | i == "Audi 90"| i == "BMW 535i" |i == "Cadillac DeVille" | i == "Cadillac Seville" | i == "Cadillac Seville"|i == "Chevrolet Corvette"| i == "Infiniti Q45"| i == "Lexus ES300" |i == "Lexus SC300"|i == "Lincoln Continental" |i == "Lincoln Town_Car" |i == "Mercedes-Benz 190E"){
+    simp = c(simp, "Luxury")
+  }
+    else if (i == "Mercedes-Benz 300E"){
+    simp = c(simp, "Mercedes-Benz300E")
+  }
+  else {
+    simp = c(simp, "Not Luxury")
+  }
+}
+simp = as.data.frame(simp)
+colnames(simp) = c("Make")
+carsdif2$Make = simp$Make
+
+
+simp2 = c()
+for (i in carsTest$Type){
+  if (i == "Midsize" ){
+    simp2 = c(simp2, "Midsize")
+  }
+  else {
+    simp2 = c(simp2, "Not Midsize")
+  }
+}
+simp2 = as.data.frame(simp2)
+colnames(simp2) = c("Type")
+carsdif2$Type = simp2$Type
+
+
+simp4 = c()
+for (i in carsTest$AirBags){
+  if (i == "None" ){
+    simp4 = c(simp4, "None")
+  }
+  else {
+    simp4 = c(simp4, "Not None")
+  }
+}
+simp4 = as.data.frame(simp4)
+colnames(simp4) = c("AirBags")
+carsdif2$AirBags = simp4$AirBags
+
+simp5 = c()
+for (i in carsTest$Cylinders){
+  if (i == "5" ){
+    simp5 = c(simp5, "5")
+  }
+  else if (i == "6") {
+    simp5 = c(simp5, "6")
+  }
+  else{
+    simp5 = c(simp5, "Not 5 or 6")
+  }
+}
+simp5 = as.data.frame(simp5)
+colnames(simp5) = c("Cylinders")
+carsdif2$Cylinders = simp5$Cylinders
+```
+
+Finding the Yhats
+```{r}
+yhat.1 = predict(best, newdata = carsdif2)
+```
+
+Writing the CSV 
+```{r}
+#write.csv(yhat.1, "C:/Users/joshu/Desktop/Stats/STATS101A/HOMEWORK/Kaggle/KaggleAtt9.csv")
+```
+
+
