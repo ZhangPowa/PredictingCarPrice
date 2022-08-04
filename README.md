@@ -1,4 +1,4 @@
 # PredictingCarPrice
 
 # Table of Contents
-..*Background[#Background]
+[Background](#background)
