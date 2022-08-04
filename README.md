@@ -20,8 +20,10 @@ The data set was given to me by my professor through Kaggle. There are two data 
 ## Methodology 
 
 ### Initial Understanding
-
+Before doing any advanced statistical analysis the first step in the research process was to figure out which numerical predictors and which categorical predictors had a strong correlation to the price variable. First, for the numerical predictors I created a correlation matrix and analyzed the correlations of each predictor to the price variable. In the numerical predictor correlation matrix we can see that out of the numerical predictors Horsepower has the highest correlation to price (0.79). 
 ![CorrelationMatrix](https://user-images.githubusercontent.com/78633730/182768925-107914cc-f261-4bda-ae28-ed60a443fe08.png)
+Instead of doing a correlation matrix for the categorical predictors, I simply ran a simple linear regression of all the categorical predictors with the price variable and saw which predictor produced the highest R^2 value. Make ended up being the best categorical variable with a R^2 value of 0.991. For one predictor this was an extremely high value, but it came with a cost. Through the summary we saw that although it was one variable there was way more than 10 betas, which made the model too complex. From these two very simple analyses of the variables, we already found key information about our potential model. First Horsepower would likely be apart of our model due to its high correlation, and second that while the Make variable was highly predictive of price, it needed to be transformed into less categories in order to keep the model less complex. 
+
 ![GVIF Table](https://user-images.githubusercontent.com/78633730/182768928-698ec0b6-246a-4ee1-a577-476e95b0ca45.png)
 
 ![AssumptionsGraphs](https://user-images.githubusercontent.com/78633730/182769051-61109f33-edd2-46dc-a8d7-dbcaa744a1b2.png)
