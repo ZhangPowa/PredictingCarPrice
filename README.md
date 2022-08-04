@@ -1,4 +1,4 @@
-# PredictingCarPrice
+# Predicting Car Price
 
-# Table of Contents
+## Table of Contents
 [Background](#background)
