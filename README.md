@@ -21,6 +21,7 @@ The data set was given to me by my professor through Kaggle. There are two data 
 
 ### Initial Understanding
 
-
+![CorrelationMatrix](https://user-images.githubusercontent.com/78633730/182768925-107914cc-f261-4bda-ae28-ed60a443fe08.png)
+![GVIF Table](https://user-images.githubusercontent.com/78633730/182768928-698ec0b6-246a-4ee1-a577-476e95b0ca45.png)
 
 
