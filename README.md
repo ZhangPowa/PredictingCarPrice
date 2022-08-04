@@ -25,7 +25,7 @@ The data set was given to me by my professor through Kaggle. There are two data 
 ![GVIF Table](https://user-images.githubusercontent.com/78633730/182768928-698ec0b6-246a-4ee1-a577-476e95b0ca45.png)
 
 ![AssumptionsGraphs](https://user-images.githubusercontent.com/78633730/182769051-61109f33-edd2-46dc-a8d7-dbcaa744a1b2.png)
-![Leverage Outlier Table](https://user-images.githubusercontent.com/78633
+![Leverage Outlier Table](https://user-images.githubusercontent.com/78633730/182769062-cf4936e1-35cf-425d-b051-01d3c1a85f48.png)
 ![Luxury Cars](https://user-images.githubusercontent.com/78633730/182769087-6a9dfab7-427a-4e30-ae02-008be26bba26.png)
 ![Model Summary](https://user-images.githubusercontent.com/78633730/182769091-02bae23c-55dc-4b6e-8ef0-471b473e5538.png)
-730/182769062-cf4936e1-35cf-425d-b051-01d3c1a85f48.png)
+
