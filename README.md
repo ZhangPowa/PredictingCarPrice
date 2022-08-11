@@ -58,6 +58,9 @@ In conclusion, this research study has helped me understand many of the strategi
 ### Model Fitting
 One of the main skills I learned is how to use different multiple linear regression strategies to find important factors for the price of a product. First I learned how to interpret and build models using lm. Then I learned how to analyze if the model was not only highly predictive but also valid (not multicollinear, and other assumptions). All of these concepts I learned to apply and use in R. 
 
+### Next Steps
+While multiple linear regression is an important skill to learn as a data analyst, this project taught me very basic skills. I did not design an experiment or collect data, all I did was analyze and fit a model. In the next project I will want to learn experimental design, and data collection. I also want to learn how to create visualizations of my findings to communicate my findings better to those that are not able to understand the higher level statsitics. 
+
 ## References
 Luxury vehicles information, prices and inventory. Autotrader. (n.d.). Retrieved August 2, 2022, from https://www.autotrader.com/luxury 
 Timmons, M. (2022, June 28). Car ownership statistics in the U.S. ValuePenguin. Retrieved August 2, 2022, from https://www.valuepenguin.com/auto-insurance/car-ownership-statistics#:~:text=The%20rate%20of%20car%20ownership,vehicles%20in%20the%20same%20period. 
