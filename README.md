@@ -31,12 +31,16 @@ After transformation, I tested the new make variable and found that it produced 
 
 ### Validation of Model
 ![Model Summary](https://user-images.githubusercontent.com/78633730/182769091-02bae23c-55dc-4b6e-8ef0-471b473e5538.png)
+
 While the final model does produce a high R^2 value, we also must check that the model meets the correct assumptions. First from the summary we can see that all betas are significant.
 ![GVIF Table](https://user-images.githubusercontent.com/78633730/182768928-698ec0b6-246a-4ee1-a577-476e95b0ca45.png)
+
 When we check the VIF’s of each predictor we find that no single predictor has a VIF of over 5. The highest VIF score that we see in the able is 4.28 which means that no multicollinearity exists within the model.
 ![AssumptionsGraphs](https://user-images.githubusercontent.com/78633730/182769051-61109f33-edd2-46dc-a8d7-dbcaa744a1b2.png)
+
 In the plots shown above we can analyze the other important assumptions needed to validate the model. From the residual vs fitted plot we see a pretty straight horizontal line centered around 0 meaning the linearity assumption holds. In the Normal Q-Q plot while there are points towards the top right of the graph that are off the line, overall most points follow, meaning the model’s error has a normal distribution. For the scale location plot while we do see a littler upwards and then downwards slope the line is mostly horizontal around the x axis. We can see that the car prices around the $60,000 price has a large influence on the scale-location plot by pulling it downwards. Overall the equal variance assumption still holds. While the final residuals vs leverage graph does not show us many potential influential points we created a table of leverage and outliers to see whether or not the model had bad leverage points. 
 ![Leverage Outlier Table](https://user-images.githubusercontent.com/78633730/182769062-cf4936e1-35cf-425d-b051-01d3c1a85f48.png)
+
 From the table we can see that out of 1500 different data points there are 10 outliers that are also leverage points. To deal with these points, I decided to take these points out of the dataset to see how the model would be impacted. While the training model’s R^2 value went up the testing model had its R-2 value lowered, so I decided to keep the points in the model. I think one reason for this is because the testing data also contains some bad leverage points meaning its better to leave the points in the dataset than take them out. Overall, the final model included 3 newly created categorical variables and 4 numerical predictors. The model passed all the assumptions needed for linear regression, and the 10 bad leverage points were kept in the model. 
 
 ## Findings
